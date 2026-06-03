@@ -1,45 +1,54 @@
 import streamlit as st
 import pandas as pd
 
-# Page Config
+from src.preprocessing import clean_text
+
 st.set_page_config(
     page_title="NLP Text Analytics Dashboard",
     page_icon="📊",
     layout="wide"
 )
 
-# Title
 st.title("📊 NLP Text Analytics Dashboard")
-st.write("Day 1 - Dataset Overview")
+
+st.header("Day 2 - Text Preprocessing")
 
 try:
-    # Load Dataset
+
     df = pd.read_csv("Womens Clothing E-Commerce Reviews.csv")
 
     st.success("Dataset Loaded Successfully ✅")
 
-    # Metrics
-    col1, col2 = st.columns(2)
+    # Find review column
+    text_column = "Review Text"
 
-    with col1:
-        st.metric("Rows", df.shape[0])
+    # Remove missing reviews
+    df = df.dropna(subset=[text_column])
 
-    with col2:
-        st.metric("Columns", df.shape[1])
+    st.write("Rows after removing missing values:", len(df))
 
-    # Preview
+    # Sample size for faster processing
+    sample_df = df.head(200)
+
+    with st.spinner("Cleaning text..."):
+
+        sample_df["Cleaned_Text"] = sample_df[text_column].apply(clean_text)
+
+    st.subheader("Original Review")
+
+    st.write(sample_df[text_column].iloc[0])
+
+    st.subheader("Cleaned Review")
+
+    st.write(sample_df["Cleaned_Text"].iloc[0])
+
     st.subheader("Dataset Preview")
-    st.dataframe(df.head())
 
-    # Columns
-    st.subheader("Column Names")
-    st.write(df.columns.tolist())
-
-    # Missing Values
-    st.subheader("Missing Values")
-    missing = df.isnull().sum().reset_index()
-    missing.columns = ["Column", "Missing Values"]
-    st.dataframe(missing)
+    st.dataframe(
+        sample_df[
+            [text_column, "Cleaned_Text"]
+        ].head(10)
+    )
 
 except Exception as e:
-    st.error(f"Error: {e}")
+    st.error(str(e))
