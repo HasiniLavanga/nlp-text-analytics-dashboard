@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from src.preprocessing import clean_text
+from src.topic_model import get_topics
 
 st.set_page_config(
     page_title="NLP Text Analytics Dashboard",
@@ -11,44 +12,53 @@ st.set_page_config(
 
 st.title("📊 NLP Text Analytics Dashboard")
 
-st.header("Day 2 - Text Preprocessing")
+st.header("Day 3 - Topic Modeling")
 
 try:
 
-    df = pd.read_csv("Womens Clothing E-Commerce Reviews.csv")
+    df = pd.read_csv(
+        "Womens Clothing E-Commerce Reviews.csv"
+    )
 
-    st.success("Dataset Loaded Successfully ✅")
-
-    # Find review column
     text_column = "Review Text"
 
-    # Remove missing reviews
     df = df.dropna(subset=[text_column])
 
-    st.write("Rows after removing missing values:", len(df))
+    sample_df = df.head(500)
 
-    # Sample size for faster processing
-    sample_df = df.head(200)
+    with st.spinner("Cleaning Text..."):
 
-    with st.spinner("Cleaning text..."):
+        sample_df["Cleaned_Text"] = sample_df[text_column].apply(
+            clean_text
+        )
 
-        sample_df["Cleaned_Text"] = sample_df[text_column].apply(clean_text)
+    st.success("Text Preprocessing Completed ✅")
 
-    st.subheader("Original Review")
-
-    st.write(sample_df[text_column].iloc[0])
-
-    st.subheader("Cleaned Review")
-
-    st.write(sample_df["Cleaned_Text"].iloc[0])
-
-    st.subheader("Dataset Preview")
+    st.subheader("Sample Cleaned Reviews")
 
     st.dataframe(
         sample_df[
             [text_column, "Cleaned_Text"]
-        ].head(10)
+        ].head()
     )
+
+    st.subheader("LDA Topic Modeling")
+
+    topics = get_topics(
+        sample_df["Cleaned_Text"]
+    )
+
+    for topic in topics:
+
+        st.write(
+            f"**{topic['Topic']}**"
+        )
+
+        st.write(
+            topic["Keywords"]
+        )
+
+        st.write("---")
 
 except Exception as e:
     st.error(str(e))
