@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 from src.preprocessing import clean_text
 from src.topic_model import get_topics
+from src.sentiment import get_sentiment
 
 st.set_page_config(
     page_title="NLP Text Analytics Dashboard",
@@ -12,7 +14,7 @@ st.set_page_config(
 
 st.title("📊 NLP Text Analytics Dashboard")
 
-st.header("Day 3 - Topic Modeling")
+st.header("Day 4 - Sentiment Analysis")
 
 try:
 
@@ -32,17 +34,58 @@ try:
             clean_text
         )
 
-    st.success("Text Preprocessing Completed ✅")
+    sentiments = sample_df["Cleaned_Text"].apply(
+        get_sentiment
+    )
 
-    st.subheader("Sample Cleaned Reviews")
+    sample_df["Sentiment"] = sentiments.apply(
+        lambda x: x[0]
+    )
+
+    sample_df["Score"] = sentiments.apply(
+        lambda x: x[1]
+    )
+
+    st.success("Sentiment Analysis Completed ✅")
+
+    st.subheader("Sentiment Distribution")
+
+    sentiment_counts = (
+        sample_df["Sentiment"]
+        .value_counts()
+        .reset_index()
+    )
+
+    sentiment_counts.columns = [
+        "Sentiment",
+        "Count"
+    ]
+
+    fig = px.bar(
+        sentiment_counts,
+        x="Sentiment",
+        y="Count",
+        title="Sentiment Distribution"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    st.subheader("Sample Reviews")
 
     st.dataframe(
         sample_df[
-            [text_column, "Cleaned_Text"]
-        ].head()
+            [
+                text_column,
+                "Sentiment",
+                "Score"
+            ]
+        ].head(20)
     )
 
-    st.subheader("LDA Topic Modeling")
+    st.subheader("Topic Modeling Results")
 
     topics = get_topics(
         sample_df["Cleaned_Text"]
