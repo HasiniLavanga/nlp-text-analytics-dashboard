@@ -5,6 +5,7 @@ import plotly.express as px
 from src.preprocessing import clean_text
 from src.topic_model import get_topics
 from src.sentiment import get_sentiment
+from src.ner import extract_entities
 
 st.set_page_config(
     page_title="NLP Text Analytics Dashboard",
@@ -14,7 +15,7 @@ st.set_page_config(
 
 st.title("📊 NLP Text Analytics Dashboard")
 
-st.header("Day 4 - Sentiment Analysis")
+st.header("Day 5 - Named Entity Recognition")
 
 try:
 
@@ -28,11 +29,9 @@ try:
 
     sample_df = df.head(500)
 
-    with st.spinner("Cleaning Text..."):
-
-        sample_df["Cleaned_Text"] = sample_df[text_column].apply(
-            clean_text
-        )
+    sample_df["Cleaned_Text"] = sample_df[text_column].apply(
+        clean_text
+    )
 
     sentiments = sample_df["Cleaned_Text"].apply(
         get_sentiment
@@ -46,7 +45,9 @@ try:
         lambda x: x[1]
     )
 
-    st.success("Sentiment Analysis Completed ✅")
+    st.success("Data Processing Completed ✅")
+
+    # Sentiment Chart
 
     st.subheader("Sentiment Distribution")
 
@@ -73,17 +74,7 @@ try:
         use_container_width=True
     )
 
-    st.subheader("Sample Reviews")
-
-    st.dataframe(
-        sample_df[
-            [
-                text_column,
-                "Sentiment",
-                "Score"
-            ]
-        ].head(20)
-    )
+    # Topic Modeling
 
     st.subheader("Topic Modeling Results")
 
@@ -101,7 +92,31 @@ try:
             topic["Keywords"]
         )
 
-        st.write("---")
+    # NER
+
+    st.subheader("Named Entity Recognition")
+
+    sample_text = sample_df[
+        text_column
+    ].iloc[0]
+
+    entities = extract_entities(
+        sample_text
+    )
+
+    if entities:
+
+        entity_df = pd.DataFrame(
+            entities
+        )
+
+        st.dataframe(entity_df)
+
+    else:
+
+        st.info(
+            "No entities found in sample review."
+        )
 
 except Exception as e:
     st.error(str(e))
