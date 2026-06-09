@@ -14,109 +14,177 @@ st.set_page_config(
 )
 
 st.title("📊 NLP Text Analytics Dashboard")
+st.markdown("### Customer Review Analytics using NLP")
 
-st.header("Day 5 - Named Entity Recognition")
+# Load Dataset
 
-try:
+df = pd.read_csv(
+    "Womens Clothing E-Commerce Reviews.csv"
+)
 
-    df = pd.read_csv(
-        "Womens Clothing E-Commerce Reviews.csv"
+text_column = "Review Text"
+
+df = df.dropna(subset=[text_column])
+
+sample_df = df.head(1000)
+
+# Preprocessing
+
+sample_df["Cleaned_Text"] = sample_df[text_column].apply(
+    clean_text
+)
+
+# Sentiment Analysis
+
+sentiments = sample_df["Cleaned_Text"].apply(
+    get_sentiment
+)
+
+sample_df["Sentiment"] = sentiments.apply(
+    lambda x: x[0]
+)
+
+sample_df["Score"] = sentiments.apply(
+    lambda x: x[1]
+)
+
+# Dashboard Metrics
+
+st.header("📈 Dashboard Overview")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric(
+        "Total Reviews",
+        len(sample_df)
     )
 
-    text_column = "Review Text"
-
-    df = df.dropna(subset=[text_column])
-
-    sample_df = df.head(500)
-
-    sample_df["Cleaned_Text"] = sample_df[text_column].apply(
-        clean_text
+with col2:
+    st.metric(
+        "Positive Reviews",
+        len(
+            sample_df[
+                sample_df["Sentiment"] == "Positive"
+            ]
+        )
     )
 
-    sentiments = sample_df["Cleaned_Text"].apply(
-        get_sentiment
+with col3:
+    st.metric(
+        "Negative Reviews",
+        len(
+            sample_df[
+                sample_df["Sentiment"] == "Negative"
+            ]
+        )
     )
 
-    sample_df["Sentiment"] = sentiments.apply(
-        lambda x: x[0]
+# Sentiment Distribution
+
+st.header("😊 Sentiment Analysis")
+
+sentiment_counts = (
+    sample_df["Sentiment"]
+    .value_counts()
+    .reset_index()
+)
+
+sentiment_counts.columns = [
+    "Sentiment",
+    "Count"
+]
+
+fig = px.pie(
+    sentiment_counts,
+    values="Count",
+    names="Sentiment",
+    title="Sentiment Distribution"
+)
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+# Topic Modeling
+
+st.header("📌 Topic Modeling")
+
+topics = get_topics(
+    sample_df["Cleaned_Text"]
+)
+
+for topic in topics:
+
+    st.write(
+        f"### {topic['Topic']}"
     )
 
-    sample_df["Score"] = sentiments.apply(
-        lambda x: x[1]
+    st.write(
+        topic["Keywords"]
     )
 
-    st.success("Data Processing Completed ✅")
+# Search Reviews
 
-    # Sentiment Chart
+st.header("🔍 Search Reviews")
 
-    st.subheader("Sentiment Distribution")
+search_text = st.text_input(
+    "Enter keyword"
+)
 
-    sentiment_counts = (
-        sample_df["Sentiment"]
-        .value_counts()
-        .reset_index()
-    )
+if search_text:
 
-    sentiment_counts.columns = [
-        "Sentiment",
-        "Count"
+    filtered = sample_df[
+        sample_df[text_column]
+        .str.contains(
+            search_text,
+            case=False,
+            na=False
+        )
     ]
 
-    fig = px.bar(
-        sentiment_counts,
-        x="Sentiment",
-        y="Count",
-        title="Sentiment Distribution"
+    st.dataframe(
+        filtered[
+            [
+                text_column,
+                "Sentiment"
+            ]
+        ]
     )
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True
+# Named Entity Recognition
+
+st.header("🏷 Named Entity Recognition")
+
+sample_review = sample_df[
+    text_column
+].iloc[0]
+
+entities = extract_entities(
+    sample_review
+)
+
+if entities:
+
+    entity_df = pd.DataFrame(
+        entities
     )
 
-    # Topic Modeling
-
-    st.subheader("Topic Modeling Results")
-
-    topics = get_topics(
-        sample_df["Cleaned_Text"]
+    st.dataframe(
+        entity_df
     )
 
-    for topic in topics:
+else:
 
-        st.write(
-            f"**{topic['Topic']}**"
-        )
-
-        st.write(
-            topic["Keywords"]
-        )
-
-    # NER
-
-    st.subheader("Named Entity Recognition")
-
-    sample_text = sample_df[
-        text_column
-    ].iloc[0]
-
-    entities = extract_entities(
-        sample_text
+    st.info(
+        "No entities found."
     )
 
-    if entities:
+# Raw Data
 
-        entity_df = pd.DataFrame(
-            entities
-        )
+st.header("📄 Dataset Preview")
 
-        st.dataframe(entity_df)
-
-    else:
-
-        st.info(
-            "No entities found in sample review."
-        )
-
-except Exception as e:
-    st.error(str(e))
+st.dataframe(
+    sample_df.head(20)
+)
