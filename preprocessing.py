@@ -2,7 +2,8 @@ import pandas as pd
 import re
 import spacy
 
-nlp = spacy.load("en_core_web_sm")
+# No external model required
+nlp = spacy.blank("en")
 
 def clean_text(text):
 
@@ -21,7 +22,7 @@ def clean_text(text):
 
     for token in doc:
 
-        if not token.is_stop and not token.is_punct and not token.is_space:
-            tokens.append(token.lemma_)
+        if not token.is_stop and not token.is_punct:
+            tokens.append(token.text)
 
     return " ".join(tokens)
