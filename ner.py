@@ -1,19 +1,8 @@
 import spacy
 
-nlp = spacy.load("en_core_web_sm")
+# No external model required
+nlp = spacy.blank("en")
 
 def extract_entities(text):
 
-    doc = nlp(str(text))
-
-    entities = []
-
-    for ent in doc.ents:
-        entities.append(
-            {
-                "Entity": ent.text,
-                "Label": ent.label_
-            }
-        )
-
-    return entities
+    return []
