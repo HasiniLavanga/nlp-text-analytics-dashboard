@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from src.preprocessing import clean_text
-from src.topic_model import get_topics
-from src.sentiment import get_sentiment
-from src.ner import extract_entities
+from preprocessing import clean_text
+from topic_model import get_topics
+from sentiment import get_sentiment
+from ner import extract_entities
 
 st.set_page_config(
     page_title="NLP Text Analytics Dashboard",
