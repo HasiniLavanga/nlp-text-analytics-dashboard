@@ -1,8 +1,7 @@
 streamlit
 pandas
 numpy
-nltk
-spacy
-scikit-learn
 plotly
+scikit-learn
+spacy
 vaderSentiment
